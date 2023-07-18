@@ -14,8 +14,7 @@ permissions:
 jobs:
   continuous_deployment_with_az:
     runs-on: ubuntu-latest
-    steps:          
-    
+    steps:              
       - name: Checkout Code
         uses: actions/checkout@v2
         
