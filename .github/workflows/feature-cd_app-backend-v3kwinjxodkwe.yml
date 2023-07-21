@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: '5.internal-document-search/src/backend/'
 
       - name: Set up Python version
         uses: actions/setup-python@v1
