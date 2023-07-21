@@ -26,14 +26,14 @@ jobs:
       - name: Build frontend
         shell: bash
         run: |
-          ls
-          pwd
-          ls 5.internal-document-search/src/backend
-          cd 5.internal-document-search/src/frontend
+          echo "intial contents of backend:"
+          ls $GITHUB_WORKSPACE/5.internal-document-search/src/backend
+          cd $GITHUB_WORKSPACE/5.internal-document-search/src/frontend
           git branch
           npm install
           npm run build
-          ls 5.internal-document-search/src/backend
+          echo "contents of backend after npm run build:"
+          ls $GITHUB_WORKSPACE/5.internal-document-search/src/backend
 
       - name: 'Install dependencies'
         shell: bash
