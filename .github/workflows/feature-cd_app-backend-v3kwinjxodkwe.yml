@@ -36,7 +36,6 @@ jobs:
           pwd
           ls
           ls $GITHUB_WORKSPACE/5.internal-document-search
-          cd 
           pip install -r $GITHUB_WORKSPACE/5.internal-document-search/src/backend/requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
@@ -46,7 +45,7 @@ jobs:
         with:
           name: python-app
           path: |
-            $GITHUB_WORKSPACE/5.internal-document-search/src/backend/ 
+            $GITHUB_WORKSPACE/5.internal-document-search/src/backend/
             !venv/
 
   deploy:
