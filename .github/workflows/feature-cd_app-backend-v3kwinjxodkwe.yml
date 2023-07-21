@@ -7,7 +7,7 @@ name: Build and deploy Python app to Azure Web App - app-backend-v3kwinjxodkwe
 on:
   push:
     branches:
-      - feature/cd
+      - deactivate-feature/cd
   workflow_dispatch:
 
 jobs:
@@ -19,6 +19,18 @@ jobs:
         with:
           ref: 'feature/cd'
 
+      - name: Build frontend
+        shell: bash
+        run: |
+          echo "intial contents of backend:"
+          ls $GITHUB_WORKSPACE/5.internal-document-search/src/backend
+          cd $GITHUB_WORKSPACE/5.internal-document-search/src/frontend
+          git branch
+          npm install
+          npm run build
+          echo "contents of backend after npm run build:"
+          ls $GITHUB_WORKSPACE/5.internal-document-search/src/backend
+      
       - name: Set up Python version
         uses: actions/setup-python@v4
         with:
@@ -62,9 +74,8 @@ jobs:
           name: python-app
           path: .
           
-      - name: 'Deploy to Azure Web App'
+      - name: 'Deploy to Azure WebApp'
         uses: azure/webapps-deploy@v2
-        id: deploy-to-webapp
-        with:
-          app-name: 'app-backend-v3kwinjxodkwe'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8EA0280C238B464CB6FB9AA7A8E6C813 }}
+        with: 
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: '.'
