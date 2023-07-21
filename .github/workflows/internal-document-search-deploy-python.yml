@@ -60,11 +60,9 @@ jobs:
           az group list
           pwd 
           ls
-      - name: Zip the code
-        run: |
-          cd 5.internal-document-search/src/backend/
-          zip -r myproject.zip .
           
-      - name: Deploy to Azure Web App
-        run: |
-          az webapp deployment source config-zip --name ${{ vars.AZURE_WEBAPP_NAME }} --resource-group ${{ vars.AZURE_WEBAPP_RESOURCE_GROUP }} --src 5.internal-document-search/src/backend/myproject.zip
+      - name: 'Deploy to Azure WebApp'
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: '5.internal-document-search/src/backend'
