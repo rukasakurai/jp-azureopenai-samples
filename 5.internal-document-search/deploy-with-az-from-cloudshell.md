@@ -48,17 +48,20 @@ cd ../../infra
 az deployment sub create --name $DEP_NAME --location $LOC --template-file main.bicep --parameters principalId=$AZURE_PRINCIPAL_ID environmentName=$AZURE_ENV_NAME location=$AZURE_LOCATION
 ```
 
-#### スクラッチでの開始
+#### data配下のPDFを利用して Search Index を作成
+```
+cd jp-azureopenai-samples/5.internal-document-search/scripts
+prepdocs.ps1 or prepdocs.sh
+```
 
-新規に環境をデプロイする場合は、以下のコマンドを実行してください。
+#### Pythonコードのデプロイ
+```
+cd jp-azureopenai-samples/5.internal-document-search/src/backend
+zip -r app.zip .
+az webapp deployment source config-zip --resource-group $RG --name $WEBAPP --src ./app.zip
+```
 
-1. `azd up` を実行します。- このコマンドを実行すると、Azure上に必要なリソースをデプロイし、アプリケーションのビルドとデプロイが実行されます。また、`./data`配下の PDF を利用して Search Index を作成します。
-1. コマンドの実行が終了すると、アプリケーションにアクセスする為の URL が表示されます。この URL をブラウザで開き、サンプルアプリケーションの利用を開始してください。  
-
-コマンド実行結果の例：
-
-!['Output from running azd up'](assets/endpoint.png)
-    
+コマンドの実行が終了すると、アプリケーションにアクセスする為の URL が表示されます。この URL をブラウザで開き、サンプルアプリケーションの利用を開始してください
 > 注意: アプリケーションのデプロイ完了には数分かかることがあります。"Python Developer" のウェルカムスクリーンが表示される場合は、数分待ってアクセスし直してください。
 
 #### アプリケーションのローカル実行
