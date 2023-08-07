@@ -159,7 +159,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: gptModelName
-          version: '0613'
+          version: '0301'
         }
       }
       {
@@ -167,7 +167,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: chatGptModelName
-          version: '0613'
+          version: '0301'
         }
       }
     ]
