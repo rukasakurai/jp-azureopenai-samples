@@ -28,3 +28,20 @@ from dotenv import load_dotenv
 
 load_dotenv("../../.azure/20230824temp2/.env")
 ```
+
+#
+## Error
+```
+Exception has occurred: CosmosHttpResponseError
+(Forbidden) Request blocked by Auth cosmos-3n4zdmtjlznz2 : Request is blocked because principal [xxx] does not have required RBAC permissions to perform action [Microsoft.DocumentDB/databaseAccounts/readMetadata] on resource [/]. Learn more: https://aka.ms/cosmos-native-rbac.
+ActivityId: xxx, Microsoft.Azure.Documents.Common/2.14.0
+Code: Forbidden
+Message: Request blocked by Auth cosmos-3n4zdmtjlznz2 : Request is blocked because principal [xxx] does not have required RBAC permissions to perform action [Microsoft.DocumentDB/databaseAccounts/readMetadata] on resource [/]. Learn more: https://aka.ms/cosmos-native-rbac.
+ActivityId: xxx, Microsoft.Azure.Documents.Common/2.14.0
+  File "/home/rusakura/code/github.com/Azure-Samples/jp-azureopenai-samples/5.internal-document-search/src/backend/approaches/chatlogging.py", line 22, in <module>
+    database = CosmosClient(endpoint, credential).get_database_client(database_name)
+```
+## Solution
+Best solution is to give the required RBAC permissions.
+
+Alternative is to comment out the logging part temporarily.
