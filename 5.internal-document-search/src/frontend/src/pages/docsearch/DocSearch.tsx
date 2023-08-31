@@ -17,6 +17,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 const DocSearch = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
 
+    const [searchIndex, setSearchIndex] = useState<string>("gptkbindex");
     const [gptModel, setGptModel] = useState<string>("text-davinci-003");
     const [temperature, setTemperature] = useState<string>("0.0");
 
@@ -36,6 +37,8 @@ const DocSearch = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+
+    const [indexOptions, setIndexOptions] = useState<IDropdownOption[]>([]);
 
     const gpt_models: IDropdownOption[] = [
         { key: "text-davinci-003", text: "text-davinci-003" },
@@ -59,6 +62,7 @@ const DocSearch = () => {
                 history: [...history, { user: question, bot: undefined }],
                 approach: Approaches.ReadRetrieveRead,
                 overrides: {
+                    searchIndex: searchIndex,
                     gptModel: gptModel,
                     temperature: temperature,
                     top: retrieveCount,
@@ -84,7 +88,31 @@ const DocSearch = () => {
         setAnswers([]);
     };
 
-    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
+    useEffect(() => {
+        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        console.log("Additional code executed");
+        
+        // Fetch index names from Azure Cognitive Search and set them in state
+        async function fetchIndexNamesAndSetOptions() {
+            const response = await fetch(`/indexnames`);
+            console.log(response)
+            const data = await response.json();
+            console.log(data)
+            const newIndexOptions = data.map((name: string) => ({
+                key: name,
+                text: name,
+              }));              
+            setIndexOptions(newIndexOptions);
+        }
+      
+        fetchIndexNamesAndSetOptions();
+    }, [isLoading]);
+
+    const onIndexChange = (_ev?: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+        if (option !== undefined) {
+            setSearchIndex(option.key as string);
+        }
+    };
 
     const onGptModelChange = (_ev?: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
         if (option !== undefined) {
@@ -138,7 +166,7 @@ const DocSearch = () => {
 
         setSelectedAnswer(index);
     };
-
+  
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
@@ -223,6 +251,14 @@ const DocSearch = () => {
                     onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
                     isFooterAtBottom={true}
                 >
+                    <Dropdown
+                        className={styles.chatSettingsSeparator}
+                        defaultSelectedKeys={[searchIndex]}
+                        selectedKey={searchIndex}
+                        label="Knowledge Base:"
+                        options={indexOptions}
+                        onChange={onIndexChange}
+                    />
                     <Dropdown
                         className={styles.chatSettingsSeparator}
                         defaultSelectedKeys={[gptModel]}

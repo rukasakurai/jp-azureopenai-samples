@@ -3,6 +3,7 @@ import time
 import mimetypes
 import urllib.parse
 from flask import Flask, request, jsonify
+from typing import Dict
 
 import tiktoken
 import openai
@@ -13,6 +14,8 @@ from azure.storage.blob import BlobServiceClient
 from approaches.chatlogging import get_user_name, write_error
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.chatread import ChatReadApproach
+from azure.search.documents.indexes import SearchIndexClient
+from azure.core.paging import ItemPaged
 
 # Replace these with your own values, either in environment variables or directly here
 AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT")
@@ -74,17 +77,38 @@ openai.api_key = openai_token.token
 # openai.api_key = os.environ.get("AZURE_OPENAI_KEY")
 
 # Set up clients for Cognitive Search and Storage
-search_client = SearchClient(
-    endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-    index_name=AZURE_SEARCH_INDEX,
-    credential=azure_credential)
+try:
+    searchIndexClient = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net", credential=azure_credential)
+    list_index_names: ItemPaged[str] = searchIndexClient.list_index_names()
+    result_list = []
+    for page in list_index_names:
+        result_list.append(page)
+        print("page:")
+        print(page)
+except Exception as e:
+    print(f"An error occurred: {e}")
+print("existing indices:")
+print(result_list)
+
+search_clients: Dict[str, SearchClient] = {}
+# index_names = ['gptkbindex', 'hotels-sample-index', 'index1', 'index2', 'index3', 'index4', 'index5']
+index_names = result_list
+
+for index_name in index_names:
+    search_clients[index_name] = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net", index_name=index_name, credential=azure_credential)
+    print("created search client for index: " + index_name)
+
+#search_client = SearchClient(
+#    endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+#    index_name=AZURE_SEARCH_INDEX,
+#    credential=azure_credential)
 blob_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", 
     credential=azure_credential)
 blob_container = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
 
 chat_approaches = {
-    "rrr": ChatReadRetrieveReadApproach(search_client, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
+    "rrr": ChatReadRetrieveReadApproach(search_clients, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
     "r": ChatReadApproach()
 }
 
@@ -175,12 +199,16 @@ def docsearch():
         write_error("docsearch", user_name, str(e))
         return jsonify({"error": str(e)}), 500
 
+@app.route("/indexnames")
+def search():
+    return jsonify(index_names)
+
 def ensure_openai_token():
     global openai_token
     if openai_token.expires_on < int(time.time()) - 60:
         openai_token = azure_credential.get_token("https://cognitiveservices.azure.com/.default")
         openai.api_key = openai_token.token
     # openai.api_key = os.environ.get("AZURE_OPENAI_KEY")
-   
+
 if __name__ == "__main__":
     app.run()

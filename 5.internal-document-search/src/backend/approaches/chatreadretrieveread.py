@@ -5,6 +5,8 @@ from approaches.approach import Approach
 from approaches.chatlogging import write_chatlog, ApproachType
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
+from typing import Dict
+from azure.core.exceptions import ResourceNotFoundError
 
 # Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
 # top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion 
@@ -51,8 +53,8 @@ Question:
 Search query:
 """
 
-    def __init__(self, search_client: SearchClient, sourcepage_field: str, content_field: str):
-        self.search_client = search_client
+    def __init__(self, search_clients: Dict[str, SearchClient], sourcepage_field: str, content_field: str):
+        self.search_clients = search_clients
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
 
@@ -82,20 +84,39 @@ Search query:
         exclude_category = overrides.get("excludeCategory") or None
         filter = "category ne '{}'".format(exclude_category.replace("'", "''")) if exclude_category else None
         semantic_ranker = overrides.get("semanticRanker")
-        if semantic_ranker:
-            r = self.search_client.search(q, 
-                                          filter=filter,
-                                          query_type=QueryType.SEMANTIC,
-                                          query_language="en-US", 
-                                          query_speller="lexicon", 
-                                          semantic_configuration_name="default", 
-                                          top=top, 
-                                          query_caption="extractive|highlight-false" if use_semantic_captions else None)
-        else:
-            r = self.search_client.search(q, filter=filter, top=top)
+
+        searchIndex = overrides.get("searchIndex")
+        print("searchIndex from user input:")
+        print(searchIndex)
+        try:
+            search_client = self.search_clients[searchIndex]
+        except KeyError:
+            print(f"Error: Search index '{searchIndex}' does not exist in self.search_clients.")
+
+        try:
+            if semantic_ranker:
+                r = search_client.search(q, 
+                                            filter=filter,
+                                            query_type=QueryType.SEMANTIC,
+                                            query_language="en-US", 
+                                            query_speller="lexicon", 
+                                            semantic_configuration_name="default", 
+                                            top=top, 
+                                            query_caption="extractive|highlight-false" if use_semantic_captions else None,
+                                            logging_enable=True)
+            else:
+                r = search_client.search(q, filter=filter, top=top, logging_enable=True)
+            print("len(list(r)): " + str(len(list(r))))
+        except ResourceNotFoundError as e:
+            print(f"ResourceNotFoundError when calling search_client.search: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
         if use_semantic_captions:
+            print("use_semantic_captions is true: " + str(use_semantic_captions))
             results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
         else:
+            print("use_semantic_captions is false: " + str(use_semantic_captions))
             results = [doc[self.sourcepage_field] + ": " + nonewlines(doc[self.content_field]) for doc in r]
         content = "\n".join(results)
 
@@ -121,7 +142,7 @@ Search query:
                 n=1, 
                 stop=["<|im_end|>", "<|im_start|>"])
             
-            response_text = completion.choices[0].text
+            response_text = completion.choices[0].text + " index=" + searchIndex
 
             total_tokens += completion.usage.total_tokens
 
@@ -142,7 +163,7 @@ Search query:
                 temperature=temaperature, 
                 n=1)
 
-            response_text = response.choices[0]["message"]["content"]
+            response_text = response.choices[0]["message"]["content"] + " index=" + searchIndex
             total_tokens += response.usage.total_tokens
 
             response = {"data_points": results, "answer": response_text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + json.dumps(messages, ensure_ascii=False).replace('\n', '<br>')}

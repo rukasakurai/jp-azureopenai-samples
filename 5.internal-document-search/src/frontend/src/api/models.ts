@@ -6,6 +6,7 @@ export const enum Approaches {
 }
 
 export type AskRequestOverrides = {
+    searchIndex?: string;
     gptModel?: string;
     semanticRanker?: boolean;
     semanticCaptions?: boolean;
