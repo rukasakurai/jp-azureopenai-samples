@@ -17,11 +17,11 @@ database_name = os.environ.get("AZURE_COSMOSDB_DATABASE")
 container_name = os.environ.get("AZURE_COSMOSDB_CONTAINER")
 # CosmosDB Initialization
 credential = DefaultAzureCredential()
-database = CosmosClient(endpoint, credential).get_database_client(database_name)
-container = database.get_container_client(container_name)
+# database = CosmosClient(endpoint, credential).get_database_client(database_name)  # TODO - uncomment
+# container = database.get_container_client(container_name)  # TODO - uncomment
 
 logger = logging.getLogger(__name__)
-logger.addHandler(AzureLogHandler(connection_string=os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")))
+# logger.addHandler(AzureLogHandler(connection_string=os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")))  # TODO - uncomment
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
@@ -56,7 +56,7 @@ def write_chatlog(approach: ApproachType, user_name: str, total_tokens: int, inp
 
     if query != "":
         properties["query"] = query
-    container.create_item(body=properties, enable_automatic_id_generation=True)
+#    container.create_item(body=properties, enable_automatic_id_generation=True)  # TODO - uncomment
     
 
 def write_error(category: str, user_name: str, error: str):

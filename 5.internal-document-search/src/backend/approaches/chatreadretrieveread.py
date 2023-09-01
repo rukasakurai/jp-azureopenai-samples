@@ -59,6 +59,9 @@ Search query:
         self.content_field = content_field
 
     def run(self, selected_model_name, gpt_chat_model, gpt_completion_model, user_name: str, history: list[dict], overrides: dict) -> any:
+        print("====================================================================")  # TODO - remove
+        print("=========== In the run method of chatreadretrieveread.py ===========")  # TODO - remove
+        print("len(search_clients)="+str(len(self.search_clients)))  # TODO - remove
         # STEP 1: Generate an optimized keyword search query based on the chat history and the last question
         chat_deployment = gpt_chat_model.get("deployment")
         max_tokens = gpt_chat_model.get("max_tokens")
@@ -79,6 +82,8 @@ Search query:
         total_tokens = completion.usage.total_tokens
 
         # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
+        print("====================================================================")  # TODO - remove
+        print("=========== Step 2: In the run method of chatreadretrieveread.py ===========")  # TODO - remove
         use_semantic_captions = True if overrides.get("semanticCaptions") else False
         top = overrides.get("top")
         exclude_category = overrides.get("excludeCategory") or None
@@ -89,7 +94,10 @@ Search query:
         print("searchIndex from user input:")
         print(searchIndex)
         try:
-            search_client = self.search_clients[searchIndex]
+            print("trying: search_client = self.search_clients.get(searchIndex)")  # TODO - remove or rewrite as debug log
+            search_client = self.search_clients.get(searchIndex) # TODO: Consider documenting this as it might have been a bug in my previous commit
+
+            print("search_client"+str(search_client))  # TODO - remove or rewrite as debug log
         except KeyError:
             print(f"Error: Search index '{searchIndex}' does not exist in self.search_clients.")
 
@@ -106,11 +114,20 @@ Search query:
                                             logging_enable=True)
             else:
                 r = search_client.search(q, filter=filter, top=top, logging_enable=True)
-            print("len(list(r)): " + str(len(list(r))))
+            # for doc in r:  # TODO - remove or rewrite as debug log
+            #     print("---")  # TODO - remove or rewrite as debug log
+            #     print(self.sourcepage_field)  # TODO - remove or rewrite as debug log
+            #     print(doc[self.sourcepage_field])  # TODO - remove or rewrite as debug log
+            #     print(self.content_field)  # TODO - remove or rewrite as debug log
+            #     print(doc[self.content_field])  # TODO - remove or rewrite as debug log
+#            print("len(list(r)): " + str(len(list(r))))  # TODO - remove or rewrite as debug log
+            print(type(r))  # TODO - remove or rewrite as debug log
+            print("---")  # TODO - remove or rewrite as debug log
         except ResourceNotFoundError as e:
             print(f"ResourceNotFoundError when calling search_client.search: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
+
 
         if use_semantic_captions:
             print("use_semantic_captions is true: " + str(use_semantic_captions))
@@ -118,7 +135,10 @@ Search query:
         else:
             print("use_semantic_captions is false: " + str(use_semantic_captions))
             results = [doc[self.sourcepage_field] + ": " + nonewlines(doc[self.content_field]) for doc in r]
+        print("---")  # TODO - remove or rewrite as debug log
+ #       print("results: " + str(len(results)))  # TODO - remove or rewrite as debug log
         content = "\n".join(results)
+        print("content: " + content)  # TODO - remove or rewrite as debug log
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
         completion_deployment = gpt_completion_model.get("deployment")
@@ -142,7 +162,7 @@ Search query:
                 n=1, 
                 stop=["<|im_end|>", "<|im_start|>"])
             
-            response_text = completion.choices[0].text + " index=" + searchIndex
+            response_text = completion.choices[0].text + " index2=" + searchIndex  # TODO - remove debugging
 
             total_tokens += completion.usage.total_tokens
 
@@ -163,7 +183,7 @@ Search query:
                 temperature=temaperature, 
                 n=1)
 
-            response_text = response.choices[0]["message"]["content"] + " index=" + searchIndex
+            response_text = response.choices[0]["message"]["content"] + " index2=" + searchIndex  # TODO - remove debugging
             total_tokens += response.usage.total_tokens
 
             response = {"data_points": results, "answer": response_text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + json.dumps(messages, ensure_ascii=False).replace('\n', '<br>')}

@@ -16,6 +16,12 @@ from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.chatread import ChatReadApproach
 from azure.search.documents.indexes import SearchIndexClient
 from azure.core.paging import ItemPaged
+from azure.core.exceptions import AzureError
+
+#from dotenv import load_dotenv # TODO - remove
+
+# load_dotenv() # TODO - remove
+#load_dotenv("../../.azure/cleanup-unused-code/.env") # TODO - remove
 
 # Replace these with your own values, either in environment variables or directly here
 AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT")
@@ -77,26 +83,47 @@ openai.api_key = openai_token.token
 # openai.api_key = os.environ.get("AZURE_OPENAI_KEY")
 
 # Set up clients for Cognitive Search and Storage
+print("AZURE_SEARCH_SERVICE: " + AZURE_SEARCH_SERVICE) # TODO - remove
 try:
     searchIndexClient = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net", credential=azure_credential)
     list_index_names: ItemPaged[str] = searchIndexClient.list_index_names()
     result_list = []
     for page in list_index_names:
         result_list.append(page)
-        print("page:")
-        print(page)
-except Exception as e:
-    print(f"An error occurred: {e}")
-print("existing indices:")
-print(result_list)
+        print("page:") # TODO - remove
+        print(page) # TODO - remove
+except AzureError as azure_error: # TODO - leverage debug level logging
+    print("An AzureError occurred:")
+    print(f"Error message: {azure_error}")
+    
+    if hasattr(azure_error, 'status_code'):
+        print(f"Status code: {azure_error.status_code}")
+    
+    if hasattr(azure_error, 'error'):
+        print("Error details:")
+        print(azure_error.error)
+    
+    if hasattr(azure_error, 'message'):
+        print(f"Error message: {azure_error.message}")
+except Exception as e:  # TODO - leverage debug level logging
+    print("An exception occurred:")
+    print(f"Type: {type(e).__name__}")
+    print(f"Exception: {e}")
+print("existing indices:") # TODO - remove
+print(result_list) # TODO - remove
 
 search_clients: Dict[str, SearchClient] = {}
-# index_names = ['gptkbindex', 'hotels-sample-index', 'index1', 'index2', 'index3', 'index4', 'index5']
-index_names = result_list
+
+# TODO - IMPORTANT: Hardcoding list here for debugging purposes, but should use result from results_list
+index_names = ['gptkbindex', 'hotels-sample-index', 'index1', 'index2', 'index3', 'index4', 'index5', 'benefitpointskbindex']
+# index_names = result_list
+
+print(index_names) # TODO - remove
 
 for index_name in index_names:
     search_clients[index_name] = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net", index_name=index_name, credential=azure_credential)
     print("created search client for index: " + index_name)
+print("len(search_clients)="+str(len(search_clients))) # TODO - remove
 
 #search_client = SearchClient(
 #    endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
