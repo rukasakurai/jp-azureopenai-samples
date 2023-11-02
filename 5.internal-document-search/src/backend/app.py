@@ -147,6 +147,7 @@ def content_file(path):
 def chat():
     ensure_openai_token()
     approach = request.json["approach"]
+    print(f"approach: {approach}") # TODO: Delete
     user_name = get_user_name(request)
     overrides = request.json.get("overrides")
 
