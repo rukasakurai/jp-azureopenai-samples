@@ -191,6 +191,7 @@ def docsearch():
 def ask():
     ensure_openai_token()
     approach = request.json["approach"]
+    print(f"approach: {approach}")
     user_name = get_user_name(request)
     overrides = request.json.get("overrides")
 
