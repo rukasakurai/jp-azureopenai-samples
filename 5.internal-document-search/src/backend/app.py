@@ -147,12 +147,19 @@ def content_file(path):
 def chat():
     ensure_openai_token()
     approach = request.json["approach"]
-    print(f"approach: {approach}") # TODO: Delete
     user_name = get_user_name(request)
     overrides = request.json.get("overrides")
 
     selected_model_name = overrides.get("gptModel")
     gpt_model = gpt_models.get(selected_model_name)
+
+    print(f"====================================================")
+    print(f"approach: {approach}") # TODO: Delete
+    print(f"user_name: {user_name}")
+    print(f"overrides: {overrides}")
+    print(f"selected_model_name: {selected_model_name}")
+    print(f"gpt_model: {gpt_model}")
+    print(f"====================================================")
 
     try:
         impl = chat_approaches.get(approach)
