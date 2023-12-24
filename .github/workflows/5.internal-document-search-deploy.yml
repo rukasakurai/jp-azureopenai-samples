@@ -1,6 +1,7 @@
 name: '5.internal-document-search-deployment'
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 23 * * *'
 
@@ -16,7 +17,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }} 
           enable-AzPSSession: true
-      
+
+      - name: 'Run Azure CLI commands'
+        run: |
+          az account show
+          az group list
+          pwd 
+          ls
+          
       - name: what-if using Azure CLI
         run: |
           results=$(az deployment sub what-if --template-file "./5.internal-document-search/infra/main.bicep" --location JapanEast -p vmLoginPassword=dummy -p resourceGroupName=rg-${{ github.run_id }} -p isPrivateNetworkEnabled=false -p environmentName=${{ github.run_id }} -p location=japaneast)
