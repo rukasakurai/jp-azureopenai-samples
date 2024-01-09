@@ -2,8 +2,6 @@ name: '5.internal-document-search-deployment'
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 23 * * *'
 
 jobs:
   deploy:
@@ -169,17 +167,4 @@ jobs:
 
             $cwd = (Get-Location)
             Start-Process -FilePath $venvPythonPath -ArgumentList "./scripts/prepdocs.py $cwd/data/* --storageaccount $env:AZURE_STORAGE_ACCOUNT --container $env:AZURE_STORAGE_CONTAINER --storagekey $env:AZURE_STORAGE_KEY --searchservice $env:AZURE_SEARCH_SERVICE --searchkey $env:AZURE_SEARCH_KEY --index $env:AZURE_SEARCH_INDEX --formrecognizerservice $env:AZURE_FORMRECOGNIZER_SERVICE --formrecognizerkey $env:AZURE_FORMRECOGNIZER_KEY -v --managedidentitycredential" -Wait -NoNewWindow
-          azPSVersion: "latest"
-
-      - name: Delete Azure Resources
-        uses: azure/powershell@v1
-        with:
-          inlineScript: |
-            $ENV:RESOURCE_GROUP_NAME = "rg-github-actions-test-${{ github.run_id }}"
-            $ENV:SUB = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            $ENV:LOC = "${{ secrets.AZURE_LOCATION }}"
-            $ENV:COGNITIVE_SERVICES_NAME = "cog-${{ github.run_id }}"
-
-            az group delete -n $ENV:RESOURCE_GROUP_NAME --yes
-            az resource delete --ids /subscriptions/$ENV:SUB/providers/Microsoft.CognitiveServices/locations/$ENV:LOC/resourceGroups/$ENV:RESOURCE_GROUP_NAME/deletedAccounts/$ENV:COGNITIVE_SERVICES_NAME
           azPSVersion: "latest"
